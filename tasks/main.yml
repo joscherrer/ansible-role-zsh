@@ -35,12 +35,12 @@
     zsh_git_version: "{{ zsh_install_version }}"
   when: zsh_force_install | bool
 
-- name: Set latest git version
+- name: Set latest zsh version
   set_fact:
     zsh_git_version: "{{ zsh_git.stdout }}"
   when: not zsh_force_install
 
-- name: Set local git version
+- name: Set local zsh version
   set_fact:
     zsh_local_version: "{{ zsh_local.stdout }}"
   when: zsh_installed.stat.exists
