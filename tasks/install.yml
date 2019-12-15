@@ -1,0 +1,28 @@
+- name: Downloading zsh
+  uri:
+    url: https://sourceforge.net/projects/zsh/files/zsh/{{ zsh_git_version }}/zsh-{{ zsh_git_version }}.tar.xz
+    dest: "/tmp/zsh-{{ zsh_git_version }}.tar.xz"
+    follow_redirects: all
+
+- name: Extracting zsh archive
+  unarchive:
+    src: "/tmp/zsh-{{ zsh_git_version }}.tar.xz"
+    dest: /opt/
+    remote_src: yes
+  become: yes
+
+- name: Configuring zsh
+  shell: ./configure --prefix=/usr
+  args:
+    chdir: "/opt/zsh-{{ zsh_git_version }}"
+  register: configure
+
+- name: Making zsh
+  make:
+    chdir: "/opt/zsh-{{ zsh_git_version }}"
+
+- name: Installing zsh
+  make:
+    target: install
+    chdir: "/opt/zsh-{{ zsh_git_version }}"
+  become: yes

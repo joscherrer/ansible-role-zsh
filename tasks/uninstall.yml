@@ -1,0 +1,11 @@
+- name: Uninstalling zsh
+  make:
+    target: uninstall
+    chdir: "/opt/zsh-{{ zsh_local_version }}"
+  become: yes
+
+- name: Removing source folder
+  become: true
+  file:
+    path: "/opt/zsh-{{ zsh_local_version }}"
+    state: absent

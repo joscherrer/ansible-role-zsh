@@ -1,0 +1,5 @@
+---
+# defaults file for ansible-role-zsh
+
+zsh_force_install: false
+zsh_install_version: "5.4.2"
