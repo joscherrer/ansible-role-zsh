@@ -3,6 +3,7 @@
     url: https://sourceforge.net/projects/zsh/files/zsh/{{ zsh_git_version }}/zsh-{{ zsh_git_version }}.tar.xz
     dest: "/tmp/zsh-{{ zsh_git_version }}.tar.xz"
     follow_redirects: all
+    status_code: [200, 304]
 
 - name: Extracting zsh archive
   unarchive:
