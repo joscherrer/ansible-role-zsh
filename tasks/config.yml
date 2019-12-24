@@ -1,0 +1,69 @@
+- name: Stat /root
+  stat:
+    path: /root
+  register: root
+  become: yes
+
+- name: Creating root .zshrc
+  copy:
+    src: "files/.zshrc"
+    dest: /root/
+    mode: 0755
+  when: root.stat.exists
+  become: yes
+
+- name: Getting passwd info
+  getent:
+    database: passwd
+
+- name: Get UID_MIN
+  shell: |
+    set -o pipefail
+    grep -E '^UID_MIN' /etc/login.defs | sed -E "s/^.*\s([0-9]*)$/\1/"
+  args:
+    executable: /bin/bash
+  register: uid_min
+  changed_when: false
+
+- name: Get UID_MAX
+  shell: |
+    set -o pipefail
+    grep -E '^UID_MAX' /etc/login.defs | sed -E "s/^.*\s([0-9]*)$/\1/"
+  args:
+    executable: /bin/bash
+  register: uid_max
+  changed_when: false
+
+- name: Creating users .zshrc
+  become: yes
+  copy:
+    src: "files/.zshrc"
+    dest: "{{ item.value[4] }}/.zshrc"
+    mode: 0755
+    owner: "{{ item.key }}"
+    group: "{{ item.key }}"
+    force: "{{ override_zshrc }}"
+  loop: "{{ lookup('dict', getent_passwd) }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value[1]|int >= uid_min.stdout|int
+    - item.value[1]|int <= uid_max.stdout|int
+    - item.value[4]
+    - '"svc_" not in item.key'
+    - 'item.key not in ignore_users'
+
+- name: Change users shell
+  become: yes
+  user:
+    name: "{{ item.key }}"
+    shell: "/usr/bin/zsh"
+  loop: "{{ lookup('dict', getent_passwd) }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value[1]|int >= uid_min.stdout|int
+    - item.value[1]|int <= uid_max.stdout|int
+    - override_shell | bool
+    - '"svc_" not in item.key'
+    - 'item.key not in ignore_users'

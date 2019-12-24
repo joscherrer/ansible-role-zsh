@@ -1,3 +1,12 @@
+- name: Reset ansible_user shell to prevent failing
+  become: yes
+  user:
+    name: "{{ ansible_ssh_user }}"
+    shell: "/bin/bash"
+
+- name: Reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
+
 - name: Uninstalling zsh
   make:
     target: uninstall
@@ -5,7 +14,7 @@
   become: yes
 
 - name: Removing source folder
-  become: true
   file:
     path: "/opt/zsh-{{ zsh_local_version }}"
     state: absent
+  become: yes

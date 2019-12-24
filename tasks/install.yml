@@ -4,10 +4,30 @@
     dest: "/tmp/zsh-{{ zsh_git_version }}.tar.xz"
     follow_redirects: all
     status_code: [200, 304]
+  register: dl_zsh
+  failed_when: false
+
+- name: Failover on gz if xz not found
+  uri:
+    url: https://sourceforge.net/projects/zsh/files/zsh/{{ zsh_git_version }}/zsh-{{ zsh_git_version }}.tar.gz
+    dest: "/tmp/zsh-{{ zsh_git_version }}.tar.gz"
+    follow_redirects: all
+    status_code: [200, 304]
+  when: dl_zsh.status == 404
+
+- name: Set tar.gz ext
+  set_fact:
+    zsh_ext: "tar.gz"
+  when: dl_zsh.status == 404
+
+- name: Set tar.xz ext
+  set_fact:
+    zsh_ext: "tar.xz"
+  when: dl_zsh.status == 200 or dl_zsh.status == 304
 
 - name: Extracting zsh archive
   unarchive:
-    src: "/tmp/zsh-{{ zsh_git_version }}.tar.xz"
+    src: "/tmp/zsh-{{ zsh_git_version }}.{{ zsh_ext }}"
     dest: /opt/
     remote_src: yes
   become: yes
@@ -27,3 +47,24 @@
     target: install
     chdir: "/opt/zsh-{{ zsh_git_version }}"
   become: yes
+
+- name: Checking that the shell is defined
+  lineinfile:
+    path: /etc/shells
+    owner: root
+    group: root
+    line: "/usr/bin/zsh"
+    insertafter: EOF
+    state: present
+  become: yes
+
+- name: Creating .zshrc in skel
+  copy:
+    src: files/.zshrc
+    dest: /etc/skel/
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- include_tasks: config.yml

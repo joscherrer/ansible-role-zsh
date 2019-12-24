@@ -1,10 +1,5 @@
 ---
 - hosts: all
   become: yes
-  vars:
-    git_install_from_source: true
-    git_install_from_source_force_update: true
-    git_install_path: "/usr"
   roles:
-    # - geerlingguy.git
-    - ansible-role-zsh
+    - ../../ansible-role-zsh
