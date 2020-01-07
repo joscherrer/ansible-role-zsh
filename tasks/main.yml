@@ -10,7 +10,9 @@
     state: present
 
 - name: Getting latest zsh version
-  shell: git ls-remote --tags git://git.code.sf.net/p/zsh/code | sed 's/.*\///' | egrep "^zsh-[0-9]*\.[0-9]*(\.[0-9]*)?$" | sort | tail -n1 | sed 's/zsh-//'
+  shell: | # noqa 306
+    set -o pipefail
+    git ls-remote --tags git://git.code.sf.net/p/zsh/code | sed 's/.*\///' | egrep "^zsh-[0-9]*\.[0-9]*(\.[0-9]*)?$" | sort | tail -n1 | sed 's/zsh-//'
   register: zsh_git
   changed_when: false
 
@@ -25,7 +27,9 @@
   register: zsh_installed
 
 - name: Getting current zsh version
-  shell: /usr/bin/zsh --version | egrep -o "[0-9]*\.[0-9]*(\.[0-9]*)?"
+  shell: |
+    set -o pipefail
+    /usr/bin/zsh --version | egrep -o "[0-9]*\.[0-9]*(\.[0-9]*)?"
   when: zsh_installed.stat.exists
   register: zsh_local
   changed_when: false
@@ -46,11 +50,11 @@
   when: zsh_installed.stat.exists
 
 - include_tasks: uninstall.yml
-  when: 
-    - zsh_installed.stat.exists 
+  when:
+    - zsh_installed.stat.exists
     - (zsh_git_version != zsh_local_version) or zsh_force_install
 
 - include_tasks: install.yml
-  when: not zsh_installed.stat.exists or 
-        zsh_force_install or 
+  when: not zsh_installed.stat.exists or
+        zsh_force_install or
         (zsh_git_version != zsh_local_version)

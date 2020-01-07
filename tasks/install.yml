@@ -33,7 +33,8 @@
   become: yes
 
 - name: Configuring zsh
-  shell: ./configure --prefix=/usr
+  command: ./configure --prefix=/usr
+  changed_when: false
   args:
     chdir: "/opt/zsh-{{ zsh_git_version }}"
   register: configure
